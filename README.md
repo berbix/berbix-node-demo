@@ -1,6 +1,6 @@
 # berbix-node-demo
 
-This is an example/demo app showing the use of the berbix-node library.  It is intended for demonstration purposes only and _should not_ be used in production.  This code is released as-is.
+This is an example/demo app showing the use of the [berbix-node](https://github.com/berbix/berbix-node) library.  It is intended for demonstration purposes only and _is not_ intended for use in production.  This code is released as-is.
 
 # Set Up
 
