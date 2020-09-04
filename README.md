@@ -1,4 +1,4 @@
-# onboarding-sample-integrations
+# berbix-node-demo
 
 # Set Up
 
