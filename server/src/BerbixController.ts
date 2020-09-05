@@ -10,7 +10,7 @@ class BerbixController {
   constructor() {
     this.client = new Client({
       apiSecret: process.env.BERBIX_API_SECRET,
-      environment: "sandbox",
+      environment: "production",
     });
   }
 

@@ -60,7 +60,7 @@ const App = () => {
       {clientToken ? (
         <VerifyContainer>
           <BerbixVerify
-            environment="sandbox"
+            environment="production"
             clientToken={clientToken}
             onComplete={onFlowCompleted}
             onError={(e: any) => {
