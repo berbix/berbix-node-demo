@@ -138,6 +138,7 @@ function App() {
           </form>
       </>
       )}
+    {error && <Typography>{error}</Typography>}
     </Container>
     </Grid>
   );
