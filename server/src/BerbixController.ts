@@ -24,7 +24,6 @@ class BerbixController {
   ): Promise<void> => {
     const customerUid = req.query.customer_uid as string;
     const tokens = await this.getTokensForCustomer(customerUid);
-
     if (tokens) {
       res.status(200).send({
         client_token: tokens.clientToken,
@@ -89,7 +88,6 @@ class BerbixController {
       });
 
       await createUser(customerUid, tokens.refreshToken);
-
       res.status(200).send({
         client_token: tokens.clientToken,
       });
