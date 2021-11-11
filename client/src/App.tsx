@@ -1,11 +1,44 @@
+import {
+  makeStyles,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+} from "@material-ui/core";
+import Alert from '@material-ui/lab/Alert';
+import AlertTitle from '@material-ui/lab/AlertTitle';
+import { useForm } from "react-hook-form";
+
 import React, { useState } from "react";
-import styled from "styled-components";
-import BerbixVerify from "berbix-react";
+import BerbixVerify from "berbix-react"; // berbix-react client SDK
 import BounceLoader from "react-spinners/BounceLoader";
 
 import { verify, getTransaction } from "./VerifyClient";
 
-const App = () => {
+interface IFormInput {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+const useStyles = makeStyles((theme) => ({
+  heading: {
+    textAlign: "center",
+    margin: theme.spacing(1, 0, 4),
+  },
+  submitButton: {
+    marginTop: theme.spacing(4),
+  },
+}));
+
+function App() {
+  
+  const {
+    register,
+    handleSubmit,
+  } = useForm<IFormInput>();
+  const { heading, submitButton } = useStyles();
   const [clientToken, setClientToken] = useState<string | undefined>();
   const [customerUid, setCustomerUid] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
@@ -13,23 +46,12 @@ const App = () => {
     boolean | undefined
   >();
   const [transactionData, setTransactionData] = useState<any>();
-  const [invalidInput, setInvalidInput] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCustomerUid(event.target.value);
-    setInvalidInput(false);
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!customerUid) {
-      setInvalidInput(true);
-      return;
-    }
-
-    verify(customerUid!)
+  const onSubmit = (data: IFormInput) => {
+    verify(data.email!) // send request to server to invoke the berbix verify API to create a transaction with email as customer UID
       .then((res) => {
+        setCustomerUid(data.email) 
         setClientToken(res.data.client_token);
       })
       .catch((err) => {
@@ -46,19 +68,26 @@ const App = () => {
   };
 
   return (
-    <Container>
+    <Grid
+      container
+      spacing={0}
+      direction="column"
+      alignItems="center"
+      justify="center"
+      style={{ minHeight: '100vh' }}
+      >
+    <Container maxWidth="xs">
       <BounceLoader size={100} color={"#69b2f7"} loading={loading} />
-      {loading && <Message>Processing...</Message>}
+      {loading && <Alert severity="info">Processing...</Alert>}
       {idVerificationStatus !== undefined && (
-        <Message>
-          Your ID was{" "}
+        <div>
           {idVerificationStatus
-            ? "accepted! 🎉"
-            : `rejected. 😭 ${transactionData.flags}`}
-        </Message>
+            ? <Alert severity="success">Your ID was accepted! 🎉</Alert>
+            : <Alert severity="error">Your ID was rejected.😭 It failed flag(s): ${transactionData.flags}</Alert>
+          }
+        </div>
       )}
       {clientToken ? (
-        <VerifyContainer>
           <BerbixVerify
             environment="production"
             clientToken={clientToken}
@@ -67,90 +96,52 @@ const App = () => {
               setError(e);
             }}
           />
-        </VerifyContainer>
       ) : (
         <>
-          <h2>Verification Demo</h2>
-          <Form onSubmit={handleSubmit}>
-            <label>
-              Customer UID:
-              <TextInput
-                type="text"
-                value={customerUid}
-                onChange={handleChange}
-                underlineColor={invalidInput ? "red" : "white"}
-              />
-            </label>
-            <Button type="submit">Get Verified</Button>
-          </Form>
-        </>
+          <Typography className={heading} variant="h3">
+            Sign Up Form
+          </Typography>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <TextField
+              {...register("email")}
+              variant="outlined"
+              margin="normal"
+              label="Email"
+              fullWidth
+              required
+            />
+            <TextField
+              {...register("firstName")}
+              variant="outlined"
+              margin="normal"
+              label="First Name"
+              fullWidth
+              required
+            />
+            <TextField
+              {...register("lastName")}
+              variant="outlined"
+              margin="normal"
+              label="Last Name"
+              fullWidth
+              required
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              className={submitButton}
+            >
+              Sign Up
+            </Button>
+          </form>
+      </>
       )}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+    {error && <Typography>{error}</Typography>}
     </Container>
+    </Grid>
   );
 };
-
-const Container = styled.div`
-  text-align: center;
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  height: 100px;
-  font-size: calc(10px + 2vmin);
-`;
-
-interface Props {
-  underlineColor: string;
-}
-
-const TextInput = styled.input<Props>`
-  border: 0;
-  background: none;
-  outline: none;
-  border-bottom: 3px solid ${(props) => props.underlineColor};
-  margin-left: 16px;
-  color: white;
-  width: 200px;
-  font-size: calc(10px + 2vmin);
-`;
-
-const Button = styled.button`
-  background-color: #69b2f7;
-  height: 50px;
-  padding: 0px 16px;
-  margin-top: 32px;
-  border: 0;
-  border-radius: 5px;
-  color: white;
-  font-size: calc(10px + 2vmin);
-  cursor: pointer;
-`;
-
-const Message = styled.p`
-  font-weight: bold;
-  color: white;
-`;
-
-const ErrorMessage = styled.p`
-  color: red;
-  font-weight: bold;
-`;
-
-const VerifyContainer = styled.div`
-  width: 50%;
-  min-width: 400px;
-`;
 
 export default App;
