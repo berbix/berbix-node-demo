@@ -20,7 +20,7 @@ git clone git@github.com:berbix/berbix-node-demo.git
 
 - [ ] Generate API keys following these instructions: https://docs.berbix.com/docs/settings#section-api-keys
 
-- [ ] Copy `/server/.env.example` to `/server/.env` and add your API secret to `BERBIX_API_SECRET`
+- [ ] Copy `server/.env.example` to `server/.env` and add your API secret to `BERBIX_API_SECRET`
 
 - [ ] Whitelist the development domain for this app.  Go to Settings (the gear icon in the top right corner of the Berbix Dashboard) —> Domains —> Add Domain —> “http://localhost:3000”
 
@@ -42,10 +42,16 @@ git clone git@github.com:berbix/berbix-node-demo.git
 
 ## Set up Server
 
-- `npm i`
-- `npm run start:dev`
+```
+$ cd server
+$ npm i
+$ npm run start:dev
+```
 
 ## Set up Client
 
-- `npm i`
-- `npm run start`
+```
+$ cd client 
+$ npm i
+$ npm run start
+```
