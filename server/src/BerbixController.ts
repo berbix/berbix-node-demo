@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 
 import { getUserByCustomerUid, createUser } from "./queries";
 import { RawRequest } from "./index";
+import axios from "axios";
 
 class BerbixController {
   private client: Client;
@@ -11,6 +12,7 @@ class BerbixController {
     this.client = new Client({
       apiSecret: process.env.BERBIX_API_SECRET,
       environment: "production",
+      apiHost: process.env.BERBIX_API_HOST,
     });
   }
 
@@ -67,7 +69,7 @@ class BerbixController {
         access_token: tokens.accessToken,
       });
     } else {
-      this.createTransaction(req, res, next);
+      this.createAPIOnlyTransaction(req, res, next);
     }
   };
 
@@ -115,6 +117,44 @@ class BerbixController {
       next(JSON.stringify(error));
     }
   };
+  /**
+   * Create a Berbix API Only Transaction
+   */
+   private createAPIOnlyTransaction = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const apiSandbox = process.env.BERBIX_API_HOST || "" + "/v0/transactions"
+      const customerUid = req.query.customer_uid as string;
+      const testTransaction = {
+        api_only_options: {
+          id_country: "US",
+          id_type: "P"
+        },
+        customer_uid: customerUid, 
+        template_key: process.env.TEMPLATE_KEY
+    };
+      const response = await axios.post(
+        apiSandbox, 
+        testTransaction,
+        { auth: {
+          username: process.env.BERBIX_API_SECRET || "",
+          password: "",
+          }
+        }
+      )
+      const tokens = response.data
+      await createUser(customerUid, tokens.refresh_token);
+      res.status(200).send({
+        access_token: tokens.access_token,
+      });
+    } catch (error) {
+      next(JSON.stringify(error));
+    }
+  };
+
 }
 
 export default BerbixController;

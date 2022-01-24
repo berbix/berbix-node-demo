@@ -28,7 +28,7 @@ declare module "berbix" {
   }
 
   declare class Client {
-    constructor({ apiSecret: string, environment: string });
+    constructor({ apiSecret: string, environment: string, apiHost: string });
     createTransaction(body: TransactionRequestBody): Promise<Tokens>;
     refreshTokens(tokens: Tokens): Promise<Tokens>;
     fetchTransaction(tokens: Tokens): Promise<Transaction>;
