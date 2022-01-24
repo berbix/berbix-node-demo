@@ -52,6 +52,25 @@ class BerbixController {
     }
   };
 
+  /**
+   * Send the client an access_token so that they can initialize an upload flow
+   */
+   imageUpload = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const customerUid = req.query.customer_uid as string;
+    const tokens = await this.getTokensForCustomer(customerUid);
+    if (tokens) {
+      res.status(200).send({
+        access_token: tokens.accessToken,
+      });
+    } else {
+      this.createTransaction(req, res, next);
+    }
+  };
+
   validateWebhook = (req: RawRequest, secret: string): boolean => {
     const isValid = this.client.validateSignature(
       secret,
@@ -90,6 +109,7 @@ class BerbixController {
       await createUser(customerUid, tokens.refreshToken);
       res.status(200).send({
         client_token: tokens.clientToken,
+        access_token: tokens.accessToken,
       });
     } catch (error) {
       next(JSON.stringify(error));

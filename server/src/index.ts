@@ -37,6 +37,7 @@ app.use((_, res, next) => {
 });
 
 app.post("/verify", berbixController.verify);
+app.post("/imageUpload", berbixController.imageUpload);
 app.get("/transactions", berbixController.getTransaction);
 
 // WEBHOOKS

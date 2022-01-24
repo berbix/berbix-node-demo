@@ -13,7 +13,7 @@ import React, { useState } from "react";
 import BerbixVerify from "berbix-react"; // berbix-react client SDK
 import BounceLoader from "react-spinners/BounceLoader";
 
-import { verify, getTransaction } from "./VerifyClient";
+import { verify, getTransaction } from "../VerifyClient";
 
 interface IFormInput {
   email: string;
@@ -98,7 +98,7 @@ function App() {
       ) : (
         <>
           <Typography className={heading} variant="h3">
-            Sign Up Form
+            Check Out
           </Typography>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <TextField
