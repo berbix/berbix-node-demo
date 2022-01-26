@@ -5,21 +5,24 @@ import {
     TextField,
     Button,
     Grid,
+    Select,
+    MenuItem,
   } from "@material-ui/core";
-  import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
   import Alert from '@material-ui/lab/Alert';
   import { useForm } from "react-hook-form";
 
   import React, { useState } from "react";
-  import { uploadImage } from "../VerifyClient";
-  import { apiSandbox } from "../Constants";
-  import axios from "axios";
-  
+  import { APIVerify, uploadImage } from "../VerifyClient";
+
+import BounceLoader from "react-spinners/BounceLoader";
+
+
   interface IFormInput {
     email: string;
     firstName: string;
     lastName: string;
     picture: string;
+    documentSide: string;
   }
   
   const useStyles = makeStyles((theme) => ({
@@ -36,53 +39,57 @@ import {
     
     const {
         register,
+        getValues,
         handleSubmit,
       } = useForm<IFormInput>();
 
     const { heading, submitButton } = useStyles();
-    const [accessToken, setAccessToken] = useState<string | undefined>();
-    const [customerUid, setCustomerUid] = useState<string | undefined>();
     const [error, setError] = useState<string | undefined>();
     const [json, setJson] = useState<string>();
+    const [loading, setLoading] = useState(false);
   
     const onSubmit = (formdata: IFormInput) => {
-        uploadImage(formdata.email!) // send request to server to create a transaction with email as customer UID
-          .then((res) => {
-            setCustomerUid(formdata.email) 
-            // setAccessToken(res.data.access_token);
-            const formjson = {
-                access_token: res.data.access_token, 
-                image: {
-                    data: formdata.picture,
-                    format: "string",
-                    image_subject: "document_front"
-                  }};
-            axios.post(`${apiSandbox}/images/upload`, formjson)
-              .then(response => {
-                console.log("Status: ", response.status);
-                console.log("Data: ", response.data);
-              }).catch(error => {
-                console.error('Something went wrong!', error);
-              });
+      const pic = getValues("picture");
+      const formData = new FormData();
+      formData.append('picture', pic[0]);
+      uploadImage(formData!)
+          .then((response) => {
+            return { data: response.data, cuid: formdata.email, document_side: formdata.documentSide };
           })
-          .catch((err) => {
+          .then((imgData) => {
+            setLoading(true);
+            // create an API-only transaction with customer UID and image data
+            APIVerify(imgData!)
+              .then((res) => {
+                setJson(JSON.stringify(res.data))
+                setLoading(false);
+              }).catch((err) => {
+                setJson(err.message)
+                setLoading(false);
+            })
+          }).catch((err) => {
+            setJson(err.message)
             setError(err);
           });
-      };
-
+        };  
     return (
       <Grid
         container
         spacing={0}
         direction="column"
         alignItems="center"
-        justify="center"
+        justifyContent="center"
         style={{ minHeight: '100vh' }}
         >
       <Container maxWidth="xs">
+          
           <Typography className={heading} variant="h3">
               Check Out
             </Typography>
+
+            <BounceLoader size={100} color={"#69b2f7"} loading={loading} />
+            {loading && <Alert severity="info">Processing...</Alert>}
+
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <TextField
                 {...register("email")}
@@ -108,6 +115,16 @@ import {
                 fullWidth
                 required
               />
+              <Select
+                {...register("documentSide")}
+                variant="outlined"
+                label="Document Side"
+                fullWidth
+                required
+                >
+                  <MenuItem value={"document_front"}>Document Front</MenuItem>
+                  <MenuItem value={"document_back"}>Document Back</MenuItem>
+              </Select>
             <input
                 {...register("picture")}
                 type="file"
@@ -126,15 +143,13 @@ import {
               {json && (
           <>
             <Typography variant="body1">
-              Below is the JSON that would normally get passed to the server
-              when a form gets submitted
+              JSON payloads or errors returned by Berbix:
             </Typography>
-            <Typography variant="body2">{json}</Typography>
+            <Typography variant="body2"><pre>{json}</pre></Typography>
           </>
         )}
       </form>
     </Container>
-    );
     </Grid>
     );
   };

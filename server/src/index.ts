@@ -5,6 +5,9 @@ import express, { Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 
 import { setUpDB } from "./queries";
+import multer from 'multer';
+import cors from 'cors';
+
 setUpDB();
 
 import BerbixController from "./BerbixController";
@@ -24,20 +27,42 @@ const rawBody = (req: RawRequest, res: Response, next: NextFunction) => {
 
 const app = express();
 app.use(rawBody);
-app.use(bodyParser.json());
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-);
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json(
+  {
+    limit: '50mb'
+  }
+));
 
-app.use((_, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
-  next();
-});
+app.use(cors())
 
+/**
+ * Multer image upload configuration
+ * Upload image to in-memory storage 
+ * And encode to base64
+ */
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage: storage,
+  // limits:{fileSize: 1000000}, // TODO: We could set image limits at the client level
+}).single("picture")
+
+app.post("/imageUpload", function (req, res){
+    upload(req, res, (err) => {
+      // base64 encode the uploaded image
+      const encoded = req.file?.buffer.toString('base64');
+      if (err instanceof multer.MulterError) {
+        res.status(400).send(JSON.stringify(err));
+      } else if (err) {
+        res.status(400).send("An unknown error occurred when uploading.")
+      } else {
+        res.status(200).send(JSON.stringify(encoded))
+      }
+    })
+  });
 app.post("/verify", berbixController.verify);
-app.post("/imageUpload", berbixController.imageUpload);
+app.post("/APIverify", berbixController.APIVerify);
 app.get("/transactions", berbixController.getTransaction);
 
 // WEBHOOKS
