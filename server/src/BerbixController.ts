@@ -76,7 +76,7 @@ class BerbixController {
     const imgData = {
       image: {
         data: req.body.data,
-        format: "image/png",
+        format: "image/png", // TODO: Infer image type from extension or uploaded file
         image_subject: req.body.document_side
       }
     };
@@ -132,7 +132,7 @@ class BerbixController {
       const customerUid = req.query.customer_uid as string;
       const tokens = await this.client.createTransaction({
         customerUid,
-        templateKey: process.env.TEMPLATE_KEY || "",
+        templateKey: process.env.VERIFY_FLOW_TEMPLATE_KEY || "",
       });
 
       await createUser(customerUid, tokens.refreshToken);
@@ -162,7 +162,7 @@ class BerbixController {
           id_type: "DL" // TODO: This could come from allowable ID types in the template
         },
         customer_uid: customerUid, 
-        template_key: process.env.TEMPLATE_KEY
+        template_key: process.env.API_ONLY_TEMPLATE_KEY
     };
       const response = await axios.post(
         apiSandbox, 
